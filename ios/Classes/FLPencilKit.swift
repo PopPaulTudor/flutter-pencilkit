@@ -432,6 +432,7 @@ private class PencilKitView: UIView {
 @available(iOS 13.0, *)
 extension PencilKitView: PKCanvasViewDelegate {
   func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
+    print(canvasView)
     channel.invokeMethod("canvasViewDidBeginUsingTool", arguments: nil)
   }
 

@@ -82,6 +82,8 @@ class FLPencilKit: NSObject, FlutterPlatformView {
         save(pencilKitView: pencilKitView, call: call, result: result)
       case "load":
         load(pencilKitView: pencilKitView, call: call, result: result)
+      case "loadBackgroundImage":
+          loadBackgroundImage(pencilKitView: pencilKitView, call: call, result: result)
       case "getBase64Data":
         getBase64Data(pencilKitView: pencilKitView, call: call, result: result)
       case "getBase64PngData":
@@ -120,6 +122,38 @@ class FLPencilKit: NSObject, FlutterPlatformView {
       result(FlutterError(code: "NATIVE_ERROR", message: error.localizedDescription, details: nil))
     }
   }
+    
+    @available(iOS 13, *)
+    private func loadBackgroundImage(pencilKitView: PencilKitView, call: FlutterMethodCall, result: FlutterResult){
+        guard let arguments = call.arguments as? [String:FlutterStandardTypedData],
+        let data:FlutterStandardTypedData = arguments["image"] else {
+            result("Couldn't find image data")
+            return
+        }
+        let uiImage = UIImage(data: data.data)!
+        pencilKitView.canvasView.isOpaque = false
+        pencilKitView.canvasView.backgroundColor = UIColor.clear
+        
+        pencilKitView.canvasView.becomeFirstResponder()
+        
+        let imageView = UIImageView(image: uiImage)
+        
+        
+        imageView.frame.size.height = 400
+        imageView.frame.size.width = 400
+        
+
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+
+        
+
+        let contentView = pencilKitView.canvasView.subviews[0]
+        pencilKitView.imageView = imageView
+        contentView.addSubview(imageView)
+        contentView.sendSubviewToBack(imageView)
+        
+    }
 
   @available(iOS 13, *)
   private func getBase64Data(
@@ -196,7 +230,8 @@ private func createCanvasView(delegate: PKCanvasViewDelegate) -> PKCanvasView {
 
 @available(iOS 13.0, *)
 private class PencilKitView: UIView {
-  private lazy var canvasView: PKCanvasView = createCanvasView(delegate: self)
+  lazy var canvasView: PKCanvasView = createCanvasView(delegate: self)
+  var imageView: UIImageView? = nil
 
   private var toolPickerForIos14: PKToolPicker? = nil
   private var toolPicker: PKToolPicker? {
@@ -236,7 +271,25 @@ private class PencilKitView: UIView {
   }
 
   private func layoutCanvasView() {
-    addSubview(canvasView)
+//    
+//      if(imageView != nil){
+//      let contentView = canvasView.subviews[0]
+//
+//          contentView.addSubview(imageView!)
+//          contentView.sendSubviewToBack(imageView!)
+//          
+//      }else{
+          addSubview(canvasView)
+//      }
+      
+      
+      canvasView.contentSize = CGSize(width: 400, height: 400)
+      canvasView.drawingPolicy = .anyInput
+             canvasView.minimumZoomScale = 0.2
+             canvasView.maximumZoomScale = 4.0
+             
+             canvasView.contentInset = UIEdgeInsets(top: 500, left: 500, bottom: 500, right: 500)
+             
     NSLayoutConstraint.activate([
       canvasView.widthAnchor.constraint(equalTo: widthAnchor),
       canvasView.heightAnchor.constraint(equalTo: heightAnchor),
